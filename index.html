@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Snakes and Ladders</title>
+    <link rel="stylesheet" href="style.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;700&display=swap" rel="stylesheet">
+</head>
+
+<body data-theme="dark">
+    <div id="app">
+        <header>
+            <button id="restart-btn" class="btn-icon btn-green" aria-label="Restart Game">↻</button>
+            <h1>Snakes & Ladders</h1>
+            <button id="theme-toggle" class="btn-icon" aria-label="Toggle Dark Mode">☀️</button>
+        </header>
+
+        <main class="game-container">
+            <!-- Game Board Zone -->
+            <div class="board-container">
+                <div id="board" class="board"></div>
+                <svg id="board-overlay" class="board-overlay" viewBox="0 0 500 500" preserveAspectRatio="none"></svg>
+            </div>
+
+            <!-- UI Layer (Corners) -->
+            <div class="ui-layer">
+                <!-- Top Left -->
+                <div id="corner-0" class="player-corner corner-tl"></div>
+                <!-- Top Right -->
+                <div id="corner-1" class="player-corner corner-tr"></div>
+                <!-- Bottom Left -->
+                <div id="corner-2" class="player-corner corner-bl"></div>
+                <!-- Bottom Right -->
+                <div id="corner-3" class="player-corner corner-br"></div>
+            </div>
+        </main>
+
+        <!-- Dice Control (Detached, injected into corners) -->
+        <template id="dice-template">
+            <div class="dice-control-panel">
+                <div class="scene">
+                    <div id="dice-cube" class="cube">
+                        <div class="cube__face cube__face--1 face-1">
+                            <div class="dot"></div>
+                        </div>
+                        <div class="cube__face cube__face--2 face-2">
+                            <div class="dot"></div>
+                            <div class="dot"></div>
+                        </div>
+                        <div class="cube__face cube__face--3 face-3">
+                            <div class="dot"></div>
+                            <div class="dot"></div>
+                            <div class="dot"></div>
+                        </div>
+                        <div class="cube__face cube__face--4 face-4">
+                            <div class="dot"></div>
+                            <div class="dot"></div>
+                            <div class="dot"></div>
+                            <div class="dot"></div>
+                        </div>
+                        <div class="cube__face cube__face--5 face-5">
+                            <div class="dot"></div>
+                            <div class="dot"></div>
+                            <div class="dot"></div>
+                            <div class="dot"></div>
+                            <div class="dot"></div>
+                        </div>
+                        <div class="cube__face cube__face--6 face-6">
+                            <div class="dot"></div>
+                            <div class="dot"></div>
+                            <div class="dot"></div>
+                            <div class="dot"></div>
+                            <div class="dot"></div>
+                            <div class="dot"></div>
+                        </div>
+                    </div>
+                </div>
+                <button id="roll-btn" class="btn-roll btn-green">ROLL</button>
+            </div>
+        </template>
+
+        <!-- Modals -->
+        <dialog id="setup-modal" class="modal">
+            <div class="modal-content">
+                <h2>Game Setup</h2>
+                <form id="setup-form">
+                    <div class="form-group">
+                        <label>Number of Players</label>
+                        <select id="player-count">
+                            <option value="2">2 Players</option>
+                            <option value="3">3 Players</option>
+                            <option value="4">4 Players</option>
+                        </select>
+                    </div>
+                    <div id="player-inputs">
+                        <!-- Name inputs generate here -->
+                    </div>
+                    <button type="submit" class="btn-primary">Start Game</button>
+                </form>
+            </div>
+        </dialog>
+
+        <dialog id="win-modal" class="modal">
+            <div class="modal-content">
+                <h2 id="winner-name">Player Wins!</h2>
+                <div class="confetti-container"></div>
+                <button id="play-again-btn" class="btn-primary">Play Again</button>
+            </div>
+        </dialog>
+    </div>
+
+    <script type="module" src="js/main.js"></script>
+</body>
+
+</html>

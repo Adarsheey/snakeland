@@ -1,0 +1,789 @@
+:root {
+    --primary-color: #6366f1;
+    --primary-hover: #4f46e5;
+    --bg-color: #f8fafc;
+    --surface-color: #ffffff;
+    --text-color: #1e293b;
+    --border-color: #e2e8f0;
+    --cell-color-1: #FFFFF0;
+    /* Soft Ivory (odd cells) */
+    --cell-color-2: #F5F0DC;
+    /* Warm Beige (even cells) */
+    --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.1);
+    --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+    --font-family: 'Outfit', sans-serif;
+    --board-size: min(85vmin, 600px);
+    /* Slightly larger, vmin for portrait/landscape */
+    --cell-size: calc(var(--board-size) / 10);
+    /* Player Colors */
+    --p1-color: #ef4444;
+    --p2-color: #3b82f6;
+    --p3-color: #10b981;
+    --p4-color: #f59e0b;
+
+    /* Dice 3D */
+    --dice-size: 60px;
+}
+
+[data-theme="dark"] {
+    --bg-color: #0f172a;
+    --surface-color: #1e293b;
+    --text-color: #f1f5f9;
+    --border-color: #334155;
+    --cell-color-1: #FFFFF0;
+    /* Soft Ivory */
+    --cell-color-2: #F5F0DC;
+    /* Warm Beige */
+    --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.5);
+}
+
+* {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+}
+
+body {
+    font-family: var(--font-family);
+    background-color: var(--bg-color);
+    color: var(--text-color);
+    transition: background-color 0.3s, color 0.3s;
+    height: 100vh;
+    overflow: hidden;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+#app {
+    width: 100%;
+    height: 100%;
+    position: relative;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+/* HEADER */
+header {
+    position: absolute;
+    top: 1rem;
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 50;
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    pointer-events: none;
+    /* Let board clicks pass through */
+    white-space: nowrap;
+}
+
+header>* {
+    pointer-events: auto;
+    /* All direct children (buttons + h1) are clickable */
+}
+
+h1 {
+    font-size: 1.5rem;
+    text-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+    margin: 0;
+}
+
+.controls {
+    pointer-events: auto;
+}
+
+/* Green variant for restart + roll buttons */
+.btn-green {
+    background: #4ade80 !important;
+    /* bright lime-green */
+    color: #0f172a !important;
+    /* dark text for contrast */
+    border: none;
+    font-weight: bold;
+    box-shadow: 0 0 12px rgba(74, 222, 128, 0.7), 0 0 4px rgba(74, 222, 128, 0.4);
+}
+
+.btn-green:hover {
+    background: #86efac !important;
+    /* even lighter on hover */
+    box-shadow: 0 0 18px rgba(74, 222, 128, 0.9), 0 0 6px rgba(74, 222, 128, 0.5);
+}
+
+/* Roll button — same look as btn-icon but wider for the ROLL text */
+.btn-roll {
+    font-size: 1rem;
+    border-radius: 20px;
+    padding: 0.45rem 1.2rem;
+    height: 40px;
+    border: none;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    backdrop-filter: blur(4px);
+    -webkit-backdrop-filter: blur(4px);
+    font-weight: bold;
+    letter-spacing: 0.05em;
+}
+
+/* BOARD CENTRIC LAYOUT */
+.game-container {
+    position: relative;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    width: 100%;
+    height: 100%;
+}
+
+.board-container {
+    position: relative;
+    width: var(--board-size);
+    height: var(--board-size);
+    background: var(--surface-color);
+    /* Fallback */
+    /* Glass / Gradient Panel Behind */
+    background: linear-gradient(135deg, rgba(255, 255, 255, 0.1), rgba(255, 255, 255, 0.05));
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+
+    border-radius: 12px;
+    padding: 8px;
+    /* Slightly more padding for the "panel" feel */
+    border: 1px solid rgba(255, 255, 255, 0.1);
+
+    /* Soft Glow Border & varied shadow */
+    box-shadow:
+        0 4px 6px -1px rgba(0, 0, 0, 0.1),
+        0 2px 4px -1px rgba(0, 0, 0, 0.06),
+        0 0 15px rgba(99, 102, 241, 0.3);
+    /* Primary glow */
+
+    z-index: 10;
+    transition: box-shadow 0.3s ease;
+}
+
+[data-theme="dark"] .board-container {
+    background: linear-gradient(135deg, rgba(30, 41, 59, 0.7), rgba(15, 23, 42, 0.8));
+    border: 1px solid rgba(255, 255, 255, 0.05);
+    box-shadow:
+        0 10px 15px -3px rgba(0, 0, 0, 0.5),
+        0 0 20px rgba(99, 102, 241, 0.2);
+    /* Subtle glow in dark mode */
+}
+
+.board {
+    display: grid;
+    grid-template-columns: repeat(10, 1fr);
+    grid-template-rows: repeat(10, 1fr);
+    width: 100%;
+    height: 100%;
+    border-radius: 4px;
+    /* Slight rounding for inner board */
+    overflow: hidden;
+    /* clean edges */
+
+    /* subtle inner shadow to sink the board in */
+    box-shadow: inset 0 0 20px rgba(0, 0, 0, 0.5);
+}
+
+.cell {
+    display: flex;
+    justify-content: flex-start;
+    align-items: flex-start;
+    padding: 2px;
+    font-weight: 700;
+    font-size: 0.7rem;
+    color: #1e293b;
+    /* Always dark — board cells are always light */
+    position: relative;
+    border: 0.5px solid rgba(128, 128, 128, 0.1);
+    /* Very subtle border */
+}
+
+.cell:nth-child(2n) {
+    background-color: var(--cell-color-1);
+}
+
+.cell:nth-child(2n+1) {
+    background-color: var(--cell-color-2);
+}
+
+.board-overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    pointer-events: none;
+    z-index: 15;
+}
+
+/* PLAYER CORNERS UI */
+.ui-layer {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    pointer-events: none;
+    z-index: 20;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    grid-template-rows: 1fr 1fr;
+    padding: 1rem;
+}
+
+.player-corner {
+    display: flex;
+    flex-direction: column;
+    padding: 1rem;
+    pointer-events: auto;
+    transition: opacity 0.4s ease, transform 0.4s ease;
+    opacity: 0.45;
+    transform: scale(0.94);
+}
+
+.player-corner.active {
+    opacity: 1;
+    transform: scale(1.04);
+}
+
+/* Positioning */
+.corner-tl {
+    align-items: flex-start;
+    justify-content: flex-start;
+}
+
+.corner-tr {
+    align-items: flex-end;
+    justify-content: flex-start;
+    text-align: right;
+}
+
+.corner-bl {
+    align-items: flex-start;
+    justify-content: flex-end;
+}
+
+.corner-br {
+    align-items: flex-end;
+    justify-content: flex-end;
+    text-align: right;
+}
+
+.player-info {
+    position: relative;
+    background: var(--surface-color);
+    padding: 0.5rem 1rem;
+    border-radius: 12px;
+    box-shadow: var(--shadow-sm);
+    margin-bottom: 0.5rem;
+    border: 2px solid transparent;
+    transition: transform 0.4s ease, box-shadow 0.4s ease;
+}
+
+/* active-turn styling is in the shimmer block below */
+
+/* Pulsing outer glow */
+@keyframes activePanelPulse {
+    0% {
+        box-shadow: 0 0 6px rgba(99, 102, 241, 0.3), 0 0 0 0 rgba(99, 102, 241, 0.0);
+    }
+
+    50% {
+        box-shadow: 0 0 22px rgba(99, 102, 241, 0.8), 0 0 0 5px rgba(99, 102, 241, 0.12);
+    }
+
+    100% {
+        box-shadow: 0 0 6px rgba(99, 102, 241, 0.3), 0 0 0 0 rgba(99, 102, 241, 0.0);
+    }
+}
+
+/* Active turn: scale + pulsing glow + animated border color */
+.player-info.active-turn {
+    transform: scale(1.05);
+    border-width: 3px;
+    animation: activePanelPulse 1.6s ease-in-out infinite,
+        borderColorCycle 1.5s linear infinite;
+}
+
+/* Cycles the border through a gradient-like color sweep */
+@keyframes borderColorCycle {
+    0% {
+        border-color: #6366f1;
+    }
+
+    25% {
+        border-color: #a855f7;
+    }
+
+    50% {
+        border-color: #ec4899;
+    }
+
+    75% {
+        border-color: #a855f7;
+    }
+
+    100% {
+        border-color: #6366f1;
+    }
+}
+
+.player-name {
+    font-weight: bold;
+    font-size: 1.1rem;
+    display: block;
+}
+
+.player-status {
+    font-size: 0.9rem;
+    opacity: 0.8;
+}
+
+/* DICE CONTROL PANEL (Floating) */
+.dice-control-panel {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 10px;
+    margin-top: 10px;
+    transition: all 0.5s ease;
+}
+
+/* 3D DICE Styling */
+.scene {
+    width: var(--dice-size);
+    height: var(--dice-size);
+    perspective: 400px;
+}
+
+.cube {
+    width: 100%;
+    height: 100%;
+    position: relative;
+    transform-style: preserve-3d;
+    transform: translateZ(calc(var(--dice-size) * -0.5));
+    transition: transform 1s ease-out;
+    /* Smooth transition for result */
+}
+
+.cube.rolling {
+    animation: spin-crazy 0.5s linear infinite;
+}
+
+.cube__face {
+    position: absolute;
+    width: var(--dice-size);
+    height: var(--dice-size);
+    border: 2px solid #ccc;
+    background: white;
+    color: black;
+    font-size: 2rem;
+    font-weight: bold;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    box-shadow: inset 0 0 10px rgba(0, 0, 0, 0.1);
+    border-radius: 8px;
+    /* Rounded corners for realism */
+}
+
+/* 3D Transforms */
+.cube__face--1 {
+    transform: rotateY(0deg) translateZ(calc(var(--dice-size)/2));
+}
+
+.cube__face--2 {
+    transform: rotateY(90deg) translateZ(calc(var(--dice-size)/2));
+}
+
+.cube__face--3 {
+    transform: rotateY(180deg) translateZ(calc(var(--dice-size)/2));
+}
+
+.cube__face--4 {
+    transform: rotateY(-90deg) translateZ(calc(var(--dice-size)/2));
+}
+
+.cube__face--5 {
+    transform: rotateX(90deg) translateZ(calc(var(--dice-size)/2));
+}
+
+.cube__face--6 {
+    transform: rotateX(-90deg) translateZ(calc(var(--dice-size)/2));
+}
+
+/* Dots/Content logic handled in CSS or JS? 
+   Let's use flex and unicode or SVGs. 
+   Simplest is unicode dice faces or just dots.
+   Let's stick to standard dice face dot patterns using CSS grid for realism.
+*/
+.cube__face {
+    display: grid;
+    grid-template: repeat(3, 1fr) / repeat(3, 1fr);
+    padding: 4px;
+    gap: 2px;
+}
+
+.dot {
+    background-color: #333;
+    border-radius: 50%;
+    align-self: center;
+    justify-self: center;
+    width: 80%;
+    height: 80%;
+    box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.5);
+}
+
+/* Face Layouts */
+.face-1 .dot:nth-child(1) {
+    grid-area: 2 / 2;
+}
+
+.face-2 .dot:nth-child(1) {
+    grid-area: 1 / 1;
+}
+
+.face-2 .dot:nth-child(2) {
+    grid-area: 3 / 3;
+}
+
+.face-3 .dot:nth-child(1) {
+    grid-area: 1 / 1;
+}
+
+.face-3 .dot:nth-child(2) {
+    grid-area: 2 / 2;
+}
+
+.face-3 .dot:nth-child(3) {
+    grid-area: 3 / 3;
+}
+
+.face-4 .dot:nth-child(1) {
+    grid-area: 1 / 1;
+}
+
+.face-4 .dot:nth-child(2) {
+    grid-area: 1 / 3;
+}
+
+.face-4 .dot:nth-child(3) {
+    grid-area: 3 / 1;
+}
+
+.face-4 .dot:nth-child(4) {
+    grid-area: 3 / 3;
+}
+
+.face-5 .dot:nth-child(1) {
+    grid-area: 1 / 1;
+}
+
+.face-5 .dot:nth-child(2) {
+    grid-area: 1 / 3;
+}
+
+.face-5 .dot:nth-child(3) {
+    grid-area: 2 / 2;
+}
+
+.face-5 .dot:nth-child(4) {
+    grid-area: 3 / 1;
+}
+
+.face-5 .dot:nth-child(5) {
+    grid-area: 3 / 3;
+}
+
+.face-6 .dot:nth-child(1) {
+    grid-area: 1 / 1;
+}
+
+.face-6 .dot:nth-child(2) {
+    grid-area: 1 / 3;
+}
+
+.face-6 .dot:nth-child(3) {
+    grid-area: 2 / 1;
+}
+
+.face-6 .dot:nth-child(4) {
+    grid-area: 2 / 3;
+}
+
+.face-6 .dot:nth-child(5) {
+    grid-area: 3 / 1;
+}
+
+.face-6 .dot:nth-child(6) {
+    grid-area: 3 / 3;
+}
+
+
+@keyframes spin-crazy {
+    0% {
+        transform: translateZ(-30px) rotateX(0deg) rotateY(0deg);
+    }
+
+    100% {
+        transform: translateZ(-30px) rotateX(720deg) rotateY(360deg);
+    }
+}
+
+.btn-primary {
+    padding: 0.5rem 1rem;
+    font-size: 0.9rem;
+    background: var(--primary-color);
+    color: white;
+    border: none;
+    border-radius: 20px;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.2);
+    cursor: pointer;
+    font-weight: bold;
+}
+
+.btn-primary:active {
+    transform: scale(0.95);
+}
+
+.btn-primary:disabled {
+    background: var(--border-color);
+    cursor: not-allowed;
+}
+
+.btn-icon {
+    font-size: 1.2rem;
+    background: rgba(255, 255, 255, 0.2);
+    border-radius: 50%;
+    width: 40px;
+    height: 40px;
+    border: none;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    backdrop-filter: blur(4px);
+}
+
+.player-token {
+    position: absolute;
+    width: calc(var(--cell-size) * 0.6);
+    height: calc(var(--cell-size) * 0.6);
+    border-radius: 50%;
+    border: 2px solid white;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.4);
+    transition: top 0.3s ease-in-out, left 0.3s ease-in-out;
+    z-index: 25;
+}
+
+/* ===================================================
+   RESPONSIVE — SMARTPHONE (portrait, ≤480px wide)
+   =================================================== */
+@media (max-width: 480px) {
+    :root {
+        --board-size: 94vw;
+        /* Board nearly full width */
+        --dice-size: 44px;
+        /* Smaller dice cube */
+    }
+
+    /* Tighter header */
+    header {
+        top: 0.4rem;
+        gap: 0.4rem;
+    }
+
+    h1 {
+        font-size: 1.1rem;
+    }
+
+    .btn-icon {
+        width: 32px;
+        height: 32px;
+        font-size: 1rem;
+    }
+
+    /* Compact corners */
+    .ui-layer {
+        padding: 4px;
+    }
+
+    .player-corner {
+        padding: 4px;
+    }
+
+    .player-info {
+        padding: 0.3rem 0.6rem;
+        border-radius: 8px;
+        margin-bottom: 0.3rem;
+    }
+
+    .player-name {
+        font-size: 0.78rem;
+    }
+
+    .player-status {
+        font-size: 0.65rem;
+    }
+
+    /* Smaller dice control */
+    .dice-control-panel {
+        gap: 6px;
+        margin-top: 6px;
+    }
+
+    .scene {
+        width: var(--dice-size);
+        height: var(--dice-size);
+    }
+
+    .cube__face {
+        width: var(--dice-size);
+        height: var(--dice-size);
+        font-size: 1.2rem;
+    }
+
+    .btn-roll {
+        padding: 0.3rem 0.8rem;
+        height: 30px;
+        font-size: 0.78rem;
+    }
+
+    /* Modal fits narrow screen */
+    .modal-content {
+        min-width: unset;
+        width: 90vw;
+        padding: 1.2rem;
+    }
+
+    .form-group input,
+    .form-group select {
+        padding: 0.6rem;
+        font-size: 0.9rem;
+    }
+}
+
+/* ===================================================
+   RESPONSIVE — SMALL TABLETS / LARGE PHONES (481-768px)
+   =================================================== */
+@media (min-width: 481px) and (max-width: 768px) {
+    :root {
+        --board-size: min(78vmin, 480px);
+        --dice-size: 52px;
+    }
+
+    h1 {
+        font-size: 1.3rem;
+    }
+
+    .player-name {
+        font-size: 0.9rem;
+    }
+
+    .player-status {
+        font-size: 0.75rem;
+    }
+
+    .player-info {
+        padding: 0.4rem 0.8rem;
+    }
+}
+
+/* ===================================================
+   RESPONSIVE — LANDSCAPE PHONE (short height, wide)
+   =================================================== */
+@media (max-height: 500px) and (orientation: landscape) {
+    :root {
+        --board-size: min(86vh, 90vw);
+        --dice-size: 38px;
+    }
+
+    header {
+        top: 0.3rem;
+    }
+
+    h1 {
+        font-size: 1rem;
+    }
+
+    .player-corner {
+        padding: 3px;
+    }
+
+    .player-info {
+        padding: 0.2rem 0.5rem;
+        margin-bottom: 0.2rem;
+    }
+
+    .player-name {
+        font-size: 0.7rem;
+    }
+
+    .player-status {
+        font-size: 0.6rem;
+    }
+
+    .dice-control-panel {
+        gap: 4px;
+        margin-top: 4px;
+    }
+
+    .btn-roll {
+        height: 26px;
+        font-size: 0.7rem;
+        padding: 0.2rem 0.6rem;
+    }
+
+    .scene {
+        width: var(--dice-size);
+        height: var(--dice-size);
+    }
+
+    .cube__face {
+        width: var(--dice-size);
+        height: var(--dice-size);
+    }
+}
+
+/* Modal and other styles remain mostly same */
+.modal {
+    margin: auto;
+    background: transparent;
+    border: none;
+}
+
+.modal::backdrop {
+    background: rgba(0, 0, 0, 0.6);
+    backdrop-filter: blur(4px);
+}
+
+.modal-content {
+    background: var(--surface-color);
+    padding: 2rem;
+    border-radius: 16px;
+    box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1);
+    text-align: center;
+    color: var(--text-color);
+    min-width: 300px;
+}
+
+.form-group {
+    margin-bottom: 1rem;
+    text-align: left;
+}
+
+.form-group input,
+.form-group select {
+    width: 100%;
+    padding: 0.8rem;
+    border-radius: 8px;
+    border: 1px solid var(--border-color);
+    background: var(--bg-color);
+    color: var(--text-color);
+    font-size: 1rem;
+}
