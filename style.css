@@ -12,7 +12,8 @@
     --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.1);
     --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
     --font-family: 'Outfit', sans-serif;
-    --board-size: min(85vmin, 600px);
+    --board-size: min(72vmin, 560px);
+    /* leave room for corner panels */
     /* Slightly larger, vmin for portrait/landscape */
     --cell-size: calc(var(--board-size) / 10);
     /* Player Colors */
@@ -48,7 +49,10 @@ body {
     background-color: var(--bg-color);
     color: var(--text-color);
     transition: background-color 0.3s, color 0.3s;
+    /* dvh = dynamic viewport height — excludes mobile browser chrome */
     height: 100vh;
+    height: 100dvh;
+    width: 100vw;
     overflow: hidden;
     display: flex;
     justify-content: center;
@@ -221,19 +225,20 @@ h1 {
     z-index: 15;
 }
 
-/* PLAYER CORNERS UI */
+/* PLAYER CORNERS UI — fixed over the full viewport */
 .ui-layer {
-    position: absolute;
+    position: fixed;
     top: 0;
     left: 0;
-    width: 100%;
-    height: 100%;
+    right: 0;
+    bottom: 0;
+    /* Safe area insets for iPhone notch / home bar */
+    padding: 3.5rem 0.5rem env(safe-area-inset-bottom, 0.5rem) 0.5rem;
     pointer-events: none;
     z-index: 20;
     display: grid;
     grid-template-columns: 1fr 1fr;
     grid-template-rows: 1fr 1fr;
-    padding: 1rem;
 }
 
 .player-corner {
@@ -610,7 +615,7 @@ h1 {
 
     /* Compact corners */
     .ui-layer {
-        padding: 4px;
+        padding: 3.2rem 4px env(safe-area-inset-bottom, 8px) 4px;
     }
 
     .player-corner {
@@ -673,7 +678,7 @@ h1 {
    =================================================== */
 @media (min-width: 481px) and (max-width: 768px) {
     :root {
-        --board-size: min(78vmin, 480px);
+        --board-size: min(72vmin, 480px);
         --dice-size: 52px;
     }
 
@@ -699,8 +704,8 @@ h1 {
    =================================================== */
 @media (max-height: 500px) and (orientation: landscape) {
     :root {
-        --board-size: min(86vh, 90vw);
-        --dice-size: 38px;
+        --board-size: min(82dvh, 82vh);
+        --dice-size: 36px;
     }
 
     header {
