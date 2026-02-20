@@ -59,12 +59,22 @@ export class Game {
 
     async processTurn(rollValue) {
         const player = this.getCurrentPlayer();
+
+        // ── Guard: finished players never move again ──────────────────────────
+        if (this.finishedPlayers.includes(player)) {
+            this.nextTurn();
+            this.ui.updateActivePlayer(this.getCurrentPlayer());
+            this.ui.setRollButtonState(true);
+            this.isProcessingTurn = false;
+            return;
+        }
+
         const startPos = player.position;
         let targetPos = startPos + rollValue;
 
         // 1. Move visuals step-by-step
         if (targetPos > 100) {
-            // Bounce back
+            // Bounce back: go to 100 then back
             const overshoot = targetPos - 100;
             const forwardSteps = 100 - startPos;
             await player.move(forwardSteps);
@@ -84,10 +94,10 @@ export class Game {
         // 2. Check Win / Finish
         if (player.position === 100) {
             await this.handlePlayerFinish(player);
-            // If game ended in handlePlayerFinish, return
             if (this.gameEnded) return;
+
         } else {
-            // 3. Check Snakes / Ladders only if not finished
+            // 3. Check Snakes / Ladders only if not at finish
             await this.checkEntityInteractions(player);
         }
 
@@ -96,20 +106,14 @@ export class Game {
 
         // 5. Next Turn
         if (!this.gameEnded) {
-            // Logic for next player:
-            // If dice was 6 and player NOT finished, they get another turn.
-            // If player finished, they don't get another turn even if they rolled 6 (usually).
-            // Let's say if you finish, turn passes.
-
             const playerFinished = this.finishedPlayers.includes(player);
+            // Extra turn for rolling 6, unless player just finished
             if (rollValue === 6 && !playerFinished) {
                 // Same player continues
             } else {
                 this.nextTurn();
             }
-        }
 
-        if (!this.gameEnded) {
             this.ui.updateActivePlayer(this.getCurrentPlayer());
             this.ui.setRollButtonState(true);
         }
@@ -118,12 +122,13 @@ export class Game {
     }
 
     nextTurn() {
-        // Find next non-finished player
-        let nextIndex = (this.currentPlayerIndex + 1) % this.players.length;
+        const total = this.players.length;
+        let nextIndex = (this.currentPlayerIndex + 1) % total;
         let loops = 0;
 
-        while (this.finishedPlayers.includes(this.players[nextIndex]) && loops < this.players.length) {
-            nextIndex = (nextIndex + 1) % this.players.length;
+        // Skip finished players
+        while (this.finishedPlayers.includes(this.players[nextIndex]) && loops < total) {
+            nextIndex = (nextIndex + 1) % total;
             loops++;
         }
 
@@ -150,23 +155,29 @@ export class Game {
         this.finishedPlayers.push(player);
         const rank = this.finishedPlayers.length;
 
-        // Show celebration for this player
-        await this.ui.showRankModal(player, rank);
+        this.ui.updateScoreboard(); // Mark player as finished in UI
 
-        // Check if game should end
-        // Game ends if only 1 player remaining (or 0 if single player testing)
-        // Active mechanics:
-        // 2 players: 1 finishes -> 1 left -> Game Over immediately? User said "others should continue".
-        // But with 1 player left, there's no one to play against.
-        // So traditionally, once N-1 players finish, the last one is last place and game ends.
+        // Show brief rank celebration (non-blocking for 2-player; auto-closes)
+        const isFinalRound = this.finishedPlayers.length >= this.players.length - 1;
 
-        if (this.finishedPlayers.length >= this.players.length - 1 && this.players.length > 1) {
+        if (isFinalRound) {
+            // Last unfinished player is automatically last place — end game now
             this.endGame();
+        } else {
+            // Mid-game winner: show celebratory modal, user must click to continue
+            await this.ui.showRankModal(player, rank);
         }
     }
 
     endGame() {
         this.gameEnded = true;
+
+        // Determine last place: the player who hasn't finished yet
+        const lastPlayer = this.players.find(p => !this.finishedPlayers.includes(p));
+        if (lastPlayer) {
+            this.finishedPlayers.push(lastPlayer); // Add as last place
+        }
+
         this.ui.showGameOver(this.finishedPlayers, this.players);
     }
 }
