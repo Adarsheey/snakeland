@@ -17,7 +17,7 @@ export class Game {
         this.isProcessingTurn = false;
         this.gameEnded = false;
 
-        this.playerColors = ['#ef4444', '#3b82f6', '#10b981', '#f59e0b'];
+        this.playerColors = ['#ff2020', '#1d8aff', '#00e676', '#ffb300'];
     }
 
     init() {

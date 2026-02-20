@@ -384,17 +384,20 @@ h1 {
     position: absolute;
     width: var(--dice-size);
     height: var(--dice-size);
-    border: 2px solid #ccc;
-    background: white;
+    border: 2px solid #e0e0e0;
+    background: #ffffff;
+    /* Pure bright white */
     color: black;
     font-size: 2rem;
     font-weight: bold;
     display: flex;
     justify-content: center;
     align-items: center;
-    box-shadow: inset 0 0 10px rgba(0, 0, 0, 0.1);
     border-radius: 8px;
-    /* Rounded corners for realism */
+    box-shadow:
+        inset 0 0 6px rgba(0, 0, 0, 0.08),
+        0 0 8px rgba(255, 255, 255, 0.6);
+    /* outer white glow so it pops in dark mode */
 }
 
 /* 3D Transforms */
